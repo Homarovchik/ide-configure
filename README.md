@@ -1,1 +1,1 @@
-# octagon-example
+# ide-configure
