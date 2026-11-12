@@ -1,29 +1,25 @@
+from contextlib import asynccontextmanager
 
-from app.db.db import SessionLocal
-from app.db import crud
+from fastapi import FastAPI
 
-
-def main():
-    with SessionLocal() as db:
-
-        categories = crud.get_categories(db)
-
-        print("=" * 50)
-        print("КАТАЛОГ КНИГ")
-        print("=" * 50)
-
-        for category in categories:
-            print(f"\nКатегория: {category.title}")
-            print("-" * 50)
-
-            for book in category.books:
-                print(f"Название: {book.title}")
-                print(f"Описание: {book.description}")
-                print(f"Цена: {book.price} руб.")
-                print(f"Ссылка: {book.url or 'Не указана'}")
-                print()
+from app.api import books, categories
+from app.db import models
+from app.db.db import Base, engine
 
 
-if __name__ == "__main__":
-    main()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # При старте приложения создаём таблицы, если их ещё нет
+    Base.metadata.create_all(bind=engine)
+    yield
 
+
+app = FastAPI(title="Books Catalog API", version="1.0.0", lifespan=lifespan)
+
+app.include_router(categories.router)
+app.include_router(books.router)
+
+
+@app.get("/health", tags=["Health"])
+def health_check():
+    return {"status": "ok"}

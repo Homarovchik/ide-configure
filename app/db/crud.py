@@ -69,8 +69,11 @@ def create_book(
     return book
 
 
-def get_books(db: Session):
-    return db.scalars(select(Book)).all()
+def get_books(db: Session, category_id: int | None = None):
+    query = select(Book)
+    if category_id is not None:
+        query = query.where(Book.category_id == category_id)
+    return db.scalars(query).all()
 
 
 def get_book(db: Session, book_id: int):
@@ -110,3 +113,9 @@ def delete_book(db: Session, book_id: int):
         return True
 
     return False
+
+# Поиск категории по названию
+def get_category_by_title(db: Session, title: str):
+    return db.scalars(
+        select(Category).where(Category.title == title)
+    ).first()
